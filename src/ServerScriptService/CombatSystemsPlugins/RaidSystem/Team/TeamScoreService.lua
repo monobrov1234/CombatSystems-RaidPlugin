@@ -7,11 +7,11 @@ local funcs = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
+local PointService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointService)
 local Signal = require(ReplicatedStorage.CombatSystemsShared.Utils.Signal)
 local RaidSystemConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.RaidSystemConfig)
 local TeamsConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.TeamsConfig)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.TeamService)
-local PointCaptureService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.PointCaptureService)
+local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
 type TeamInfo = typeof(require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Modules.SharedEntities.TeamInfo))
 
 -- ROBLOX OBJECTS
@@ -108,7 +108,7 @@ function funcs.scoreIncrementLoop()
 		while running do
 			for name: string, score: number in pairs(scoreMap) do
 				local totalIncome = 0
-				for _, point: PointCaptureService.PointView in ipairs(PointCaptureService.getCapturedPoints(name)) do
+				for _, point: PointService.PointView in ipairs(PointService.getCapturedPoints(name)) do
 					totalIncome += RaidSystemConfig.TeamScoreConfig.IncomePerPoint * point.Info.ProgressProperty.Value / 100
 				end
 

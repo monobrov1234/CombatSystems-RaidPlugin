@@ -6,10 +6,12 @@ local funcs = {}
 -- SERVICES
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local PointPlayerTrackService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointPlayerTrackService)
+local PointProgressService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointProgressService)
+local PointService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointService)
 local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.TeamService)
-local TeamScoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.TeamScoreService)
-local PointCaptureService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.PointCaptureService)
+local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
+local TeamScoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamScoreService)
 type TeamInfo = typeof(require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Modules.SharedEntities.TeamInfo))
 
 -- ROBLOX OBJECTS
@@ -27,7 +29,8 @@ function module.startRaid()
 	if raidRunning then return end
 	raidRunning = true
 	TeamScoreService.start()
-	PointCaptureService.start()
+	PointPlayerTrackService.start()
+	PointProgressService.start()
 	log:info("Raid started")
 end
 
@@ -35,7 +38,9 @@ function module.stopRaid()
 	if not raidRunning then return end
 	raidRunning = false
 	TeamScoreService.stop()
-	PointCaptureService.stop()
+	PointPlayerTrackService.stop()
+	PointProgressService.stop()
+	PointService.loadRaidPoints()
 	log:info("Raid stopped")
 end
 
@@ -81,7 +86,7 @@ function funcs.init()
 	-- team service should be first
 	TeamService.init()
 	TeamScoreService.init()
-	PointCaptureService.init()
+	PointService.loadRaidPoints()
 end
 funcs.init()
 
