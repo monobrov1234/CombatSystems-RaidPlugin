@@ -19,7 +19,7 @@ local configSetRemote = ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Events
 local startStopRaidRemote = ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Events.RaidService.ClientToServer.StartStopRaid
 
 -- FINALS
-local log: Logger.SelfObject = Logger.new("TeamService")
+local log: Logger.SelfObject = Logger.new("RaidService")
 
 -- STATE
 local raidRunning = false

@@ -1,0 +1,69 @@
+{
+    "ClassName": "Folder",
+    "Children": [
+        {
+            "ClassName": "Folder",
+            "Name": "RaidService",
+            "Children": [
+                {
+                    "ClassName": "Folder",
+                    "Name": "ClientToServer",
+                    "Children": [
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "ConfigSet"
+                        },
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "StartStopRaid"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ClassName": "Folder",
+            "Name": "TeamService",
+            "Children": [
+                {
+                    "ClassName": "Folder",
+                    "Name": "ServerToClient",
+                    "Children": [
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "InitTeamsInfo"
+                        },
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "TeamAdded"
+                        },
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "TeamRemoved"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ClassName": "Folder",
+            "Name": "TeamScoreService",
+            "Children": [
+                {
+                    "ClassName": "Folder",
+                    "Name": "ServerToClient",
+                    "Children": [
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "InitTeamScoresInfo"
+                        },
+                        {
+                            "ClassName": "RemoteEvent",
+                            "Name": "TeamScoreUpdated"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

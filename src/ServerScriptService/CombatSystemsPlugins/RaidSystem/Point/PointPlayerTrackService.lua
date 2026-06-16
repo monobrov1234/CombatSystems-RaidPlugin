@@ -10,7 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local PointService = require(script.Parent.PointService)
 local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.TeamService)
+local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
 
 -- FINALS
 local log: Logger.SelfObject = Logger.new("PointPlayerTrackService")
