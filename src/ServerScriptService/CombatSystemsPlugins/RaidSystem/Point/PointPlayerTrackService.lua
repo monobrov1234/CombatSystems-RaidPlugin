@@ -35,87 +35,65 @@ end
 function funcs.startTrackLoop()
 	trackThread = task.spawn(function()
 		while running do
-			for _, player: Player in ipairs(Players:GetPlayers()) do
-				if not TeamService.getPlayerTeam(player) then continue end -- if the player has no team then he can't capture anything
-
-				local character: Model? = player.Character
-				local humanoid: Humanoid?
-				local rootPart: BasePart?
-				if character then
-					humanoid = character:FindFirstChildOfClass("Humanoid") :: Humanoid?
-					rootPart = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-				end
-
-				-- check whether player is within any point's capture area
-				for _, point: PointService.PointView in pairs(PointService.getPoints()) do
-					local capturingIndex: number? = table.find(point.State.CapturingPlayers, player)
-
-					-- validate player state
-					local isInArea = humanoid
-						and rootPart
-						and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
-						and funcs.isPointInsidePart(point.Info.CaptureArea, rootPart.Position)
-
-					if
-						capturingIndex == nil -- ensure that the player is not capturing this point already
-						and isInArea -- ensure that the player is within the capture area
-					then
-						-- player entered the capturing area
-						log:debug("Player {} entered the point {}", player.Name, point.Info.Name)
-						table.insert(point.State.CapturingPlayers, player)
-					elseif capturingIndex ~= nil and not isInArea then
-						-- player left from the capturing area
-						log:debug("Player {} left the point {}", player.Name, point.Info.Name)
-						table.remove(point.State.CapturingPlayers, capturingIndex)
-					end
-				end
-			end
-
-			for _, point: PointService.PointView in pairs(PointService.getPoints()) do
-				-- ensure delete invalid players
-				local invalidPlayers = {} :: { Player }
-				for _, player: Player in ipairs(point.State.CapturingPlayers) do
-					if player.Parent and TeamService.getPlayerTeam(player) and player.Character then continue end
-					table.insert(invalidPlayers, player)
-				end
-
-				for _, player in ipairs(invalidPlayers) do
-					log:debug("Player (invalid) {} left the point {}", player.Name, point.Info.Name)
-					table.remove(point.State.CapturingPlayers, table.find(point.State.CapturingPlayers, player))
-				end
-
-				-- update point state
-				funcs.updatePointState(point)
-			end
-
+			funcs.updateCapturingPlayers()
+			funcs.updatePointStates()
 			task.wait(0.5)
 		end
 	end)
 end
 
-function funcs.updatePointState(point: PointService.PointView)
-	-- update player count
-	point.Info.PlayersProperty.Value = #point.State.CapturingPlayers
+function funcs.updateCapturingPlayers()
+	-- add new players
+	for _, player: Player in ipairs(Players:GetPlayers()) do
+		for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+			if table.find(point.State.CapturingPlayers, player) == nil then continue end -- already capturing
+			if not funcs.isPlayerCanCapture(player, point) then continue end -- invalid state
 
-	-- check that all players in the list are in a same team
-	local foundSameTeam = ""
-	local sameTeam = true
-	for _, otherPlayer: Player in ipairs(point.State.CapturingPlayers) do
-		local otherTeam = otherPlayer.Team :: Team -- guaranteed in captureDetectLoop
-		if foundSameTeam == "" then foundSameTeam = otherTeam.Name end
-
-		if otherTeam.Name ~= foundSameTeam then
-			sameTeam = false
-			break
+			log:debug("Player {} entered the point {}", player.Name, point.Info.Name)
+			table.insert(point.State.CapturingPlayers, player)
 		end
 	end
 
-	if sameTeam then -- if every player capturing this point are in a same team OR there is no players, unblock the point and set the capturing team to that team
-		point.Info.BlockedProperty.Value = false
-		point.Info.CapturingTeamProperty.Value = foundSameTeam -- here it can be either "" (empty) or a team name
-	else -- if players capturing this point have different teams, point can't be captured
-		point.Info.BlockedProperty.Value = true
-		point.Info.CapturingTeamProperty.Value = "" -- empty string, no one is capturing now
+	-- clear old players (not in area, dead, kicked, not in any team)
+	for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+		local invalidPlayers = {} :: { Player }
+		for _, player: Player in ipairs(point.State.CapturingPlayers) do
+			if not funcs.isPlayerCanCapture(player, point) then continue end
+			table.insert(invalidPlayers, player)
+		end
+
+		for _, player in ipairs(invalidPlayers) do
+			log:debug("Player {} left the point {}", player.Name, point.Info.Name)
+			table.remove(point.State.CapturingPlayers, table.find(point.State.CapturingPlayers, player))
+		end
+	end
+end
+
+function funcs.updatePointStates()
+	for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+		-- update player count
+		point.Info.PlayersProperty.Value = #point.State.CapturingPlayers
+
+		-- check that all players in the list are in a same team
+		local foundSameTeam = ""
+		local sameTeam = true
+		for _, otherPlayer: Player in ipairs(point.State.CapturingPlayers) do
+			local otherTeam = otherPlayer.Team :: Team -- guaranteed in captureDetectLoop
+			if foundSameTeam == "" then foundSameTeam = otherTeam.Name end
+
+			if otherTeam.Name ~= foundSameTeam then
+				sameTeam = false
+				break
+			end
+		end
+
+		if sameTeam then -- if every player capturing this point are in a same team OR there is no players, unblock the point and set the capturing team to that team
+			point.Info.BlockedProperty.Value = false
+			point.Info.CapturingTeamProperty.Value = foundSameTeam -- here it can be either "" (empty) or a team name
+		else -- if players capturing this point have different teams, point can't be captured
+			point.Info.BlockedProperty.Value = true
+			point.Info.CapturingTeamProperty.Value = "" -- empty string, no one is capturing now
+		end
 	end
 end
 
@@ -123,6 +101,22 @@ function funcs.isPointInsidePart(part: BasePart, worldPos: Vector3): boolean
 	local localPos = part.CFrame:PointToObjectSpace(worldPos)
 	local halfSize = part.Size * 0.5
 	return math.abs(localPos.X) <= halfSize.X and math.abs(localPos.Y) <= halfSize.Y and math.abs(localPos.Z) <= halfSize.Z
+end
+
+function funcs.isPlayerCanCapture(player: Player, point: PointService.PointView): boolean
+	if not player.Parent then return false end -- kicked?
+	if not TeamService.getPlayerTeam(player) then return false end -- doesn't have team?
+
+	local character: Model? = player.Character
+	if not character then return false end -- not loaded?
+	local humanoid: Humanoid? = character:FindFirstChildOfClass("Humanoid")
+	local rootPart: BasePart? = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if not humanoid or not rootPart or humanoid:GetState() == Enum.HumanoidStateType.Dead then return false end -- dead?
+
+	local isInArea = funcs.isPointInsidePart(point.Info.CaptureArea, rootPart.Position)
+	if not isInArea then return false end -- not in point area
+
+	return true
 end
 
 return module

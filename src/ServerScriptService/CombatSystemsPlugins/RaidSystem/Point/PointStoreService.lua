@@ -8,7 +8,7 @@ local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
 local RaidSystemConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.RaidSystemConfig)
 
 -- FINALS
-local log: Logger.SelfObject = Logger.new("PointService")
+local log: Logger.SelfObject = Logger.new("PointStoreService")
 
 -- STATE
 export type PointInfo = {
