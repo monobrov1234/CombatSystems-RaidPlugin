@@ -22,8 +22,8 @@ local log: Logger.SelfObject = Logger.new("TeamService")
 local teams = {} :: { [string]: TeamInfo }
 
 -- PUBLIC EVENTS
-module.TeamAdded = Signal.new() -- function(info: TeamInfo)
-module.TeamRemoved = Signal.new() -- function(info: TeamInfo)
+module.TeamAdded = Signal.new() -- (info: TeamInfo)
+module.TeamRemoved = Signal.new() -- (info: TeamInfo)
 
 -- PUBLIC API
 function module.init()

@@ -8,9 +8,9 @@ local funcs = {}
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local PointService = require(script.Parent.PointService)
+local PointStoreService = require(script.Parent.PointStoreService)
 local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
+local TeamStoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamStoreService)
 
 -- FINALS
 local log: Logger.SelfObject = Logger.new("PointPlayerTrackService")
@@ -45,7 +45,7 @@ end
 function funcs.updateCapturingPlayers()
 	-- add new players
 	for _, player: Player in ipairs(Players:GetPlayers()) do
-		for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+		for _, point: PointStoreService.PointView in pairs(PointStoreService.getPoints()) do
 			if table.find(point.State.CapturingPlayers, player) == nil then continue end -- already capturing
 			if not funcs.isPlayerCanCapture(player, point) then continue end -- invalid state
 
@@ -55,7 +55,7 @@ function funcs.updateCapturingPlayers()
 	end
 
 	-- clear old players (not in area, dead, kicked, not in any team)
-	for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+	for _, point: PointStoreService.PointView in pairs(PointStoreService.getPoints()) do
 		local invalidPlayers = {} :: { Player }
 		for _, player: Player in ipairs(point.State.CapturingPlayers) do
 			if not funcs.isPlayerCanCapture(player, point) then continue end
@@ -70,7 +70,7 @@ function funcs.updateCapturingPlayers()
 end
 
 function funcs.updatePointStates()
-	for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+	for _, point: PointStoreService.PointView in pairs(PointStoreService.getPoints()) do
 		-- update player count
 		point.Info.PlayersProperty.Value = #point.State.CapturingPlayers
 
@@ -103,9 +103,9 @@ function funcs.isPointInsidePart(part: BasePart, worldPos: Vector3): boolean
 	return math.abs(localPos.X) <= halfSize.X and math.abs(localPos.Y) <= halfSize.Y and math.abs(localPos.Z) <= halfSize.Z
 end
 
-function funcs.isPlayerCanCapture(player: Player, point: PointService.PointView): boolean
+function funcs.isPlayerCanCapture(player: Player, point: PointStoreService.PointView): boolean
 	if not player.Parent then return false end -- kicked?
-	if not TeamService.getPlayerTeam(player) then return false end -- doesn't have team?
+	if not TeamStoreService.getPlayerTeam(player) then return false end -- doesn't have team?
 
 	local character: Model? = player.Character
 	if not character then return false end -- not loaded?

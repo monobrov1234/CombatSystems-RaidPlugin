@@ -7,11 +7,11 @@ local funcs = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
-local PointService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointService)
+local PointStoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointStoreService)
 local Signal = require(ReplicatedStorage.CombatSystemsShared.Utils.Signal)
 local RaidSystemConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.RaidSystemConfig)
 local TeamsConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.TeamsConfig)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
+local TeamStoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamStoreService)
 type TeamInfo = typeof(require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Modules.SharedEntities.TeamInfo))
 
 -- ROBLOX OBJECTS
@@ -26,21 +26,20 @@ local running = false
 local scoreIncrementLoopThread: thread?
 
 -- PUBLIC EVENTS
-module.TeamScoreUpdated = Signal.new()
+module.TeamScoreUpdated = Signal.new() -- (teamName: string, score: number)
 
 -- PUBLIC API
 function module.init()
 	module.resetTeamScores()
 
-	TeamService.TeamAdded:connect(funcs.handleTeamAdded)
-	TeamService.TeamRemoved:connect(funcs.handleTeamRemoved)
+	TeamStoreService.TeamAdded:connect(funcs.handleTeamAdded)
+	TeamStoreService.TeamRemoved:connect(funcs.handleTeamRemoved)
+	module.TeamScoreUpdated:connect(funcs.handleScoreUpdated)
 
 	for _, player: Player in ipairs(Players:GetPlayers()) do
 		funcs.handlePlayerJoined(player)
 	end
 	Players.PlayerAdded:Connect(funcs.handlePlayerJoined)
-
-	module.TeamScoreUpdated:connect(funcs.handleScoreUpdated)
 end
 
 function module.start()
@@ -58,7 +57,7 @@ end
 
 function module.resetTeamScores()
 	table.clear(scoreMap)
-	local teams = TeamService.getTeams()
+	local teams = TeamStoreService.getTeams()
 	for _, team: TeamInfo in pairs(teams) do
 		scoreMap[team.Name] = 0
 
@@ -106,18 +105,21 @@ end
 function funcs.scoreIncrementLoop()
 	scoreIncrementLoopThread = task.spawn(function()
 		while running do
-			for name: string, score: number in pairs(scoreMap) do
-				local totalIncome = 0
-				for _, point: PointService.PointView in ipairs(PointService.getCapturedPoints(name)) do
-					totalIncome += RaidSystemConfig.TeamScoreConfig.IncomePerPoint * point.Info.ProgressProperty.Value / 100
-				end
-
-				module.addTeamScore(name, totalIncome)
-			end
-
+			funcs.updateScores()
 			task.wait(1)
 		end
 	end)
+end
+
+function funcs.updateScores() 
+	for name: string, score: number in pairs(scoreMap) do
+		local totalIncome = 0
+		for _, point: PointStoreService.PointView in ipairs(PointStoreService.getCapturedPoints(name)) do
+			totalIncome += RaidSystemConfig.TeamScoreConfig.IncomePerPoint * point.Info.ProgressProperty.Value / 100
+		end
+
+		module.addTeamScore(name, totalIncome)
+	end
 end
 
 return module

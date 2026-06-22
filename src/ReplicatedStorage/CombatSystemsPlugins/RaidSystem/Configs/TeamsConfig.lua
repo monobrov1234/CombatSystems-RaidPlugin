@@ -24,5 +24,5 @@ starterTeams[2] = {
 
 return {
 	MaxTeams = 4, -- overall max team count on the battlefield
-	StarterTeams = starterTeams, -- initial team configuration, the game need a minimum of 2 teams to start, otherwise teams will need to be added through admin console
+	StarterTeams = starterTeams, -- initial team configuration, the system needs a minimum of 2 teams to start, otherwise teams will need to be added through admin console
 }

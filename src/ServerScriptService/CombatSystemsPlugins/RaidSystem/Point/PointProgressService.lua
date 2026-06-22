@@ -6,7 +6,7 @@ local funcs = {}
 
 -- SERVICES
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local PointService = require(script.Parent.PointService)
+local PointStoreService = require(script.Parent.PointStoreService)
 local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
 local RaidSystemConfig = require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Configs.RaidSystemConfig)
 
@@ -44,7 +44,7 @@ function funcs.startProgressLoop()
 end
 
 function funcs.updatePointsProgress(tickSpeed: number)
-	for _, point: PointService.PointView in pairs(PointService.getPoints()) do
+	for _, point: PointStoreService.PointView in pairs(PointStoreService.getPoints()) do
 		if not funcs.isPointNeedProgressChange(point) then return end
 
 		local owningTeam = point.Info.OwningTeamProperty.Value -- can be empty
@@ -81,7 +81,7 @@ function funcs.updatePointsProgress(tickSpeed: number)
 	end
 end
 
-function funcs.isPointNeedProgressChange(point: PointService.PointView): boolean
+function funcs.isPointNeedProgressChange(point: PointStoreService.PointView): boolean
 	-- if no one is capturing - no progress changes
 	if #point.State.CapturingPlayers == 0 then return false end
 	-- if blocked - no progress changes

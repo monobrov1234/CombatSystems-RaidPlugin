@@ -8,9 +8,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local PointPlayerTrackService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointPlayerTrackService)
 local PointProgressService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointProgressService)
-local PointService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointService)
+local PointStoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Point.PointStoreService)
 local Logger = require(ReplicatedStorage.CombatSystemsShared.Utils.LoggerUtil)
-local TeamService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamService)
+local TeamStoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamStoreService)
 local TeamScoreService = require(ServerScriptService.CombatSystemsPlugins.RaidSystem.Team.TeamScoreService)
 type TeamInfo = typeof(require(ReplicatedStorage.CombatSystemsPlugins.RaidSystem.Modules.SharedEntities.TeamInfo))
 
@@ -40,24 +40,22 @@ function module.stopRaid()
 	TeamScoreService.stop()
 	PointPlayerTrackService.stop()
 	PointProgressService.stop()
-	PointService.loadRaidPoints()
+	PointStoreService.loadRaidPoints()
 	log:info("Raid stopped")
 end
 
 -- INTERNAL FUNCTIONS
 function funcs.handleConfigSet(player: Player, defenderTeamName: string, defenderTeamIconId: string, raiderTeamName: string, raiderTeamIconId: string)
-	assert(
-		typeof(defenderTeamName) == "string"
+	assert(typeof(defenderTeamName) == "string"
 			and typeof(defenderTeamIconId) == "string"
 			and typeof(raiderTeamName) == "string"
-			and typeof(raiderTeamIconId) == "string"
-	)
+			and typeof(raiderTeamIconId) == "string")
 
-	for name: string, team: TeamInfo in pairs(TeamService.getTeams()) do
-		TeamService.removeTeam(team)
+	for name: string, team: TeamInfo in pairs(TeamStoreService.getTeams()) do
+		TeamStoreService.removeTeam(team)
 	end
 
-	TeamService.addTeam({
+	TeamStoreService.addTeam({
 		Name = defenderTeamName,
 		LayoutOrder = 1,
 		Color = Color3.new(0, 1, 0.2),
@@ -65,7 +63,7 @@ function funcs.handleConfigSet(player: Player, defenderTeamName: string, defende
 		StartPoints = 0,
 	})
 
-	TeamService.addTeam({
+	TeamStoreService.addTeam({
 		Name = raiderTeamName,
 		LayoutOrder = 2,
 		Color = Color3.new(1, 0.184314, 0.184314),
@@ -83,10 +81,9 @@ function funcs.handleStartStopRaid(player: Player)
 end
 
 function funcs.init()
-	-- team service should be first
-	TeamService.init()
+	TeamStoreService.init() -- init order is important!
 	TeamScoreService.init()
-	PointService.loadRaidPoints()
+	PointStoreService.loadRaidPoints()
 end
 funcs.init()
 
